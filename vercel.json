@@ -1,5 +1,4 @@
 {
-  "rewrites": [
-    { "source": "/((?!index.html|dashboard.html|view.html|assets/).*)", "destination": "/view.html?user=$1" }
-  ]
+  "cleanUrls": true,
+  "trailingSlash": false
 }
