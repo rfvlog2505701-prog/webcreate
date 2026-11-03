@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/((?!index.html|view.html|assets/).*)", "destination": "/view.html?user=$1" }
+  ]
+}
