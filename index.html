@@ -1,38 +1,28 @@
 <!DOCTYPE html>
-<html lang="bn" class="dark">
+<html lang="bn" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebForge - Instant Single-File Publisher</title>
+    <title>CloudHost - Secure Cloud Server & Web Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        darkBg: '#0b0f19',
-                        cardBg: 'rgba(17, 24, 39, 0.7)',
+                        cloudBlue: '#0066ff',
+                        skyBg: '#f0f6ff',
                     }
                 }
             }
         }
     </script>
-    <style>
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-    </style>
-    <!-- Firebase SDK (Modular v10) -->
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // আপনার ফায়ারবেস কনফিগারেশন
         const firebaseConfig = {
             apiKey: "AIzaSyA1xamm1F6qzEAT1TEfNMpF6xD8HYJsNVo",
             authDomain: "testfirebase-872d3.firebaseapp.com",
@@ -40,143 +30,88 @@
             projectId: "testfirebase-872d3",
             storageBucket: "testfirebase-872d3.firebasestorage.app",
             messagingSenderId: "70746254150",
-            appId: "1:70746254150:web:348b30cf428dd6d9449347",
-            measurementId: "G-PV17LVJRJK"
+            appId: "1:70746254150:web:348b30cf428dd6d9449347"
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        const auth = getAuth(app);
 
-        window.publishWebsite = async function() {
-            const usernameInput = document.getElementById('username');
-            const htmlCodeInput = document.getElementById('htmlCode');
-            const statusDiv = document.getElementById('status');
-            const publishBtn = document.getElementById('publishBtn');
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = 'dashboard.html';
+            }
+        });
 
-            let username = usernameInput.value.trim().toLowerCase();
-            const htmlCode = htmlCodeInput.value.trim();
+        window.handleAuth = async function(isLogin) {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const msg = document.getElementById('authMsg');
 
-            if (!username || !htmlCode) {
-                showStatus('দয়া করে ইউজারনেম এবং HTML কোড উভয়ই দিন!', 'error');
+            if(!email || !pass) {
+                msg.innerText = "দয়া করে ইমেইল ও পাসওয়ার্ড দিন!";
                 return;
             }
 
-            // ক্লিন ইউজারনেম (স্পেস ও স্পেশাল ক্যারেক্টার রিমুভ)
-            const cleanUsername = username.replace(/[^a-z0-9-_]/g, '');
-            if(cleanUsername !== username) {
-                usernameInput.value = cleanUsername;
-                username = cleanUsername;
-            }
-
-            publishBtn.disabled = true;
-            publishBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> পাবলিশ হচ্ছে...';
-            showStatus('ফায়ারবেসে ডেটা সেভ করা হচ্ছে...', 'info');
-
             try {
-                // ডেটাবেজে সেভ করা
-                await set(ref(db, 'users/' + cleanUsername), {
-                    code: htmlCode,
-                    createdAt: Date.now()
-                });
-
-                const siteUrl = `${window.location.origin}/${cleanUsername}`;
-                statusDiv.innerHTML = `
-                    <div class="p-4 bg-emerald-950/60 border border-emerald-500/50 rounded-xl text-emerald-200 mt-4 shadow-lg animate-fade-in">
-                        <div class="flex items-center space-x-2 font-bold text-emerald-400 mb-1">
-                            <i class="fa-solid fa-circle-check text-lg"></i>
-                            <span>ওয়েবসাইট সফলভাবে পাবলিশ হয়েছে!</span>
-                        </div>
-                        <p class="text-xs text-emerald-300/80 mb-3">নিচের লিংকে ক্লিক করে আপনার লাইভ সাইট ভিজিট করুন:</p>
-                        <div class="flex items-center bg-slate-900/90 rounded-lg p-2 border border-emerald-500/30">
-                            <input type="text" readonly value="${siteUrl}" id="copyUrl" class="bg-transparent text-cyan-300 text-xs w-full px-2 outline-none font-mono">
-                            <button onclick="copyToClipboard()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-md font-sans transition">কপি</button>
-                            <a href="${siteUrl}" target="_blank" class="ml-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-3 py-1.5 rounded-md font-sans transition flex items-center">ভিজিট <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[10px]"></i></a>
-                        </div>
-                    </div>
-                `;
+                if(isLogin) {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, pass);
+                }
+                window.location.href = 'dashboard.html';
             } catch (error) {
-                console.error(error);
-                showStatus(`ত্রুটি হয়েছে: ${error.message}`, 'error');
-            } finally {
-                publishBtn.disabled = false;
-                publishBtn.innerHTML = '<i class="fa-solid fa-rocket mr-2"></i> রান ও পাবলিশ করুন';
+                msg.innerText = "ত্রুটি: " + error.message;
             }
-        };
-
-        function showStatus(message, type) {
-            const statusDiv = document.getElementById('status');
-            let colorClass = 'text-cyan-400';
-            if(type === 'error') colorClass = 'text-rose-400';
-            if(type === 'info') colorClass = 'text-amber-400';
-            
-            statusDiv.innerHTML = `<p class="text-sm font-medium ${colorClass} mt-3 animate-pulse">${message}</p>`;
-        }
-
-        window.copyToClipboard = function() {
-            const copyText = document.getElementById("copyUrl");
-            copyText.select();
-            navigator.clipboard.writeText(copyText.value);
-            alert("লিংক কপি করা হয়েছে!");
         }
     </script>
 </head>
-<body class="bg-darkBg text-slate-100 min-h-screen bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]">
+<body class="bg-skyBg text-slate-800 font-sans">
 
-    <div class="max-w-4xl mx-auto px-4 py-8 md:py-12">
-        <!-- Header -->
-        <header class="text-center mb-8">
-            <div class="inline-flex items-center justify-center p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl text-cyan-400 mb-4 shadow-inner">
-                <i class="fa-solid fa-bolt-lightning text-2xl"></i>
+    <!-- Navbar -->
+    <nav class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <div class="bg-blue-600 text-white p-2 rounded-xl shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-cloud text-xl"></i>
             </div>
-            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                ইনস্ট্যান্ট ওয়েব বিল্ডার ও পাবলিশার
-            </h1>
-            <p class="text-slate-400 text-sm md:text-base mt-2">আপনার সিঙ্গেল ফাইল HTML কোড দিন, আর সেকেন্ডের মধ্যে নিজস্ব স্ল্যাশ ইউআরএল (/username) এ লাইভ করুন!</p>
-        </header>
+            <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">CloudHost</span>
+        </div>
+        <div>
+            <a href="#authSection" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-medium shadow-md shadow-blue-500/20 hover:bg-blue-700 transition">লগইন / রেজিস্টার</a>
+        </div>
+    </nav>
 
-        <!-- Main Card -->
-        <div class="glass-panel p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden">
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <!-- Hero Section (Inspired by your image layout) -->
+    <header class="max-w-5xl mx-auto text-center py-16 px-4">
+        <div class="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold mb-4">
+            🚀 Secure Cloud Server For Your Business
+        </div>
+        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
+            Instant Cloud Web Hosting & <span class="text-blue-600">Single-File Builder</span>
+        </h1>
+        <p class="text-slate-600 max-w-2xl mx-auto text-base md:text-lg mb-10">
+            নিমিষেই আপনার কোড দিয়ে ওয়েবসাইট লাইভ করুন, ফেভিকন যুক্ত করুন এবং API ব্যবহার করে অটোমেট করুন।
+        </p>
 
-            <div class="space-y-6 relative z-10">
-                <!-- Username Input -->
+        <!-- Auth Box -->
+        <div id="authSection" class="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-xl border border-blue-100 text-left">
+            <h3 class="text-xl font-bold text-slate-900 mb-4 text-center">আপনার অ্যাকাউন্টে প্রবেশ করুন</h3>
+            <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold mb-2 text-slate-300 flex items-center">
-                        <i class="fa-solid fa-at text-cyan-400 mr-2"></i> ইউনিক ইউজারনেম (আপনার লিংক হবে: /username)
-                    </label>
-                    <div class="relative flex items-center">
-                        <span class="absolute left-4 text-slate-500 font-mono text-sm">/</span>
-                        <input type="text" id="username" placeholder="eg. ridowan" class="w-full pl-8 pr-4 py-3 bg-slate-900/80 border border-slate-700/80 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 text-white font-mono text-sm transition">
-                    </div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">ইমেইল এড্রেস</label>
+                    <input type="email5" id="email" placeholder="user@example.com" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 text-sm">
                 </div>
-
-                <!-- HTML Code Input -->
                 <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-sm font-semibold text-slate-300 flex items-center">
-                            <i class="fa-solid fa-code text-indigo-400 mr-2"></i> আপনার সম্পূর্ণ HTML কোড (Single File)
-                        </label>
-                        <span class="text-xs text-slate-500 font-mono">HTML5 / CSS / JS Supported</span>
-                    </div>
-                    <textarea id="htmlCode" rows="12" placeholder="<!DOCTYPE html>&#10;<html>&#10;<head><title>My Site</title></head>&#10;<body style='background:#111; color:#fff; text-align:center; padding-top:20vh;'>&#10;  <h1>হ্যালো ওয়ার্ল্ড! 🚀</h1>&#10;</body>&#10;</html>" class="w-full px-4 py-3 bg-slate-900/90 border border-slate-700/80 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 font-mono text-xs md:text-sm text-emerald-400 leading-relaxed transition resize-y"></textarea>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">পাসওয়ার্ড</label>
+                    <input type="password" id="password" placeholder="••••••••" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 text-sm">
                 </div>
-
-                <!-- Publish Button -->
-                <button id="publishBtn" onclick="publishWebsite()" class="w-full py-3.5 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-semibold rounded-xl transition duration-200 shadow-lg shadow-cyan-600/25 flex items-center justify-center text-base cursor-pointer">
-                    <i class="fa-solid fa-rocket mr-2"></i> রান ও পাবলিশ করুন
-                </button>
-
-                <!-- Status Area -->
-                <div id="status" class="text-center"></div>
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="handleAuth(true)" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition shadow-md shadow-blue-500/20">লগইন</button>
+                    <button onclick="handleAuth(false)" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition">রেজিস্টার</button>
+                </div>
+                <p id="authMsg" class="text-xs text-rose-500 text-center font-medium mt-2"></p>
             </div>
         </div>
+    </header>
 
-        <!-- Footer Note -->
-        <footer class="text-center mt-8 text-xs text-slate-500">
-            <p>Powered by Firebase Realtime Database & Vercel Serverless Hosting ⚡</p>
-        </footer>
-    </div>
 </body>
-                          </html>
-                          
+</html>
