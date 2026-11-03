@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading...</title>
+    <title>লোড হচ্ছে...</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -24,16 +24,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         let username = urlParams.get('user');
 
-        if (!username) {
-            const pathSegments = window.location.pathname.split('/').filter(Boolean);
-            if (pathSegments.length > 0) {
-                username = pathSegments[0];
-            }
-        }
-
         async function loadSite() {
             if (!username) {
-                document.body.innerHTML = "<h2 style='text-align:center;margin-top:20vh;font-family:sans-serif;'>❌ ইউজারনেম পাওয়া যায়নি!</h2>";
+                document.body.innerHTML = "<h2 style='text-align:center;margin-top:20vh;font-family:sans-serif;color:red;'>❌ কোনো ইউজারনেম দেওয়া হয়নি!</h2>";
                 return;
             }
 
@@ -42,7 +35,6 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     
-                    // ফেভিকন সেট করার কোড
                     if(data.favicon) {
                         let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
                         link.type = 'image/x-icon';
@@ -55,14 +47,16 @@
                     document.write(data.code);
                     document.close();
                 } else {
-                    document.body.innerHTML = `<h2 style='text-align:center;margin-top:20vh;font-family:sans-serif;'>⚠️ "${username}" নামের কোনো সাইট নেই!</h2>`;
+                    document.body.innerHTML = `<h2 style='text-align:center;margin-top:20vh;font-family:sans-serif;color:orange;'>⚠️ "${username}" নামের কোনো সাইট ডেটাবেজে পাওয়া যায়নি!</h2>`;
                 }
             } catch (err) {
-                document.body.innerHTML = "<h2 style='text-align:center;margin-top:20vh;font-family:sans-serif;'>⚠️ ডেটাবেজ ত্রুটি!</h2>";
+                document.body.innerHTML = "<h2 style='text-align:center;margin-top:20vh;font-family:sans-serif;color:red;'>⚠️ ডেটাবেজ সংযোগে সমস্যা হয়েছে!</h2>";
             }
         }
         loadSite();
     </script>
 </head>
-<body></body>
+<body style="background:#0f172a; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif;">
+    <h3>ওয়েবসাইট লোড হচ্ছে...</h3>
+</body>
 </html>
